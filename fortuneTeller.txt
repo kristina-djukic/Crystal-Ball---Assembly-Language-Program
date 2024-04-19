@@ -1,0 +1,1144 @@
+;MADE BY KRISTINA DUKIC 89211057
+
+JMP main
+JMP isr
+
+cell_for_ball:
+DB "\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF"
+
+star1:
+DB "\x01\x80\x01\x80\x01\x80\x03\xC0\x03\xC0\x07\xE0\x1F\xF8\xFF\xFF\x1F\xF8\x07\xE0\x03\xC0\x03\xC0\x01\x80\x01\x80\x01\x80\x00\x00\x00\x00\x00\x00\x00"
+
+star2:
+DB "\x02\x00\x02\x00\x07\x00\x07\x00\x0F\x80\x3F\xE0\xFF\xF8\x3F\xE0\x0F\x80\x07\x00\x07\x00\x02\x00\x02\x00\x00\x00\x00\x00\x00\x00"
+
+star3:
+DB "\x00\x00\x01\x80\x01\x80\x01\x80\x01\x80\x01\x80\x00\x00\x7C\x3E\x7C\x3E\x00\x00\x01\x80\x01\x80\x01\x80\x01\x80\x01\x80\x00\x00"
+
+star4:
+DB "\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x80\x00\x80\x01\xC0\x07\xF0\x01\xC0\x00\x80\x00\x80\x00\x00\x00\x00\x00\x00\x00\x00"
+
+quit:
+DW 0
+
+isr:
+PUSH A 
+INC B
+CALL fill_in_random
+CMP B, 3
+JNE tenSec
+MOV [quit], 1
+tenSec:
+MOV A, 2
+OUT 2
+POP A
+IRET
+
+
+title:
+DB "CRYSTAL BALL" 
+DB 0
+
+title2: 
+DB "FORTUNE TELLER"
+DB 0
+
+instructions:
+DB "PRESS {I}"
+DB 0
+
+instruction_page_text:
+DB "THERE ARE" 
+DB "TWO MODES"
+DB "PRESS ONE FOR:"
+DB "THINKING {1}"
+DB "PRESS TWO FOR:"
+DB "TEXT {2}"
+
+text_for_thinking:
+DB "YOU CHOSE THE"
+DB "THINKING MODE."
+DB "YOU HAVE A"
+DB "COUPLE OF SEC"
+DB " TO THINK OF"
+DB "A QUESTION."
+DB "PRESS:"
+DB "REPEAT {R}"
+DB "BACK {B}"
+DB "START {S}"
+
+text_for_text:
+DB "YOU CHOSE THE"
+DB "  TEXT MODE.  "
+DB "WRITE DOWN"
+DB "THE QUESTION  "
+DB "IN THE TEXT"
+DB "  DISPLAY. "
+DB "PRESS:"
+DB "REPEAT {R}"
+DB "BACK {B}"
+DB "CLEAR {0}"
+DB "START {S}"
+
+option1:
+DB "YES, DEFINITELY!"
+DB 0
+
+option2:
+DB "     NO WAY     "
+DB 0
+
+option3:
+DB "  YES, WHY NOT  "
+DB 0
+
+option4:
+DB "  NOT A CHANCE  "
+DB 0
+
+option5:
+DB "IT IS NOT LIKELY"
+DB 0
+
+option6:
+DB " MOST CERTAINLY "
+DB 0
+
+option7:
+DB "   ABSOLUTELY   "
+DB 0
+
+
+option8:
+DB "   MOST LIKELY  "
+DB 0
+
+option9:
+DB " CERTAINLY NOT   "
+DB 0
+
+ask:
+DB "START THINKING"
+DB 0
+
+ask1:
+DB "WRITE A QUESTION"
+DB  0
+
+ready:
+DB "  READY? Y/N"
+DB 0
+
+think:
+DB "THINKING"
+DB 0
+
+;function to print random answers
+answers:
+MOV A, D
+OUT 8
+MOVB AH, [C]
+CMPB AH, 0
+JE allPrinted
+MOVB AL, 251
+OUT 9
+ADDB DL, 2
+INC C
+JMP answers
+
+allPrinted:
+RET
+
+;function to clean text
+clean:
+loop_clean:
+MOV A, D
+OUT 8
+MOVB AH, 0
+MOVB AL, 0
+OUT 9
+ADDB DL, 2
+CMPB DL, 32
+JNE loop_clean
+RET
+
+;function to redefine chars
+redefine:
+MOV B, 16
+redefine_loop:
+CMP B, 0
+JNE con_redefining
+RET
+con_redefining:
+MOV A, D
+OUT 8
+MOV A, [C]
+OUT 9
+DEC B
+ADD C, 2
+ADD D, 2
+JMP redefine_loop
+
+;random answers generator
+answer_generator:
+IN 10
+AND A, 0x000F
+CMPB AL, 1
+JE str1
+CMPB AL, 2
+JE str2
+CMPB AL, 3
+JE str3
+CMPB AL, 4
+JE str4
+CMPB AL, 5
+JE str5
+CMPB AL, 6
+JE str6
+CMPB AL, 7
+JE str7
+CMPB AL, 8
+JE str8
+CMPB AL, 9
+JE str9
+JMP answer_generator
+
+str1:
+MOV C, option1
+RET
+str2:
+MOV C, option2
+RET
+str3:
+MOV C, option3
+RET
+str4:
+MOV C, option4
+RET
+str5:
+MOV C, option5
+RET
+str6:
+MOV C, option6
+RET
+str7:
+MOV C, option7
+RET
+str8:
+MOV C, option8
+RET
+str9:
+MOV C, option9
+RET
+
+
+;function for printing text in light yellow color
+print_text:
+MOV A, D
+OUT 8
+MOVB AH, [B]
+MOVB AL, 254
+OUT 9
+INC B
+ADDB DL, 2
+RET
+
+;function for printing text in blue color
+print_text_blue:
+MOV A, D
+OUT 8
+MOVB AH, [B]
+MOVB AL, 31
+OUT 9
+INC B
+ADDB DL, 2
+RET
+
+;function for printing outside black cells of crystall ball
+char_color_pos:
+MOV A, D
+OUT 8
+MOVB AH, 194
+MOVB AL, 0
+OUT 9
+RET
+
+;function for printing brown cells of crystall ball
+char_brown_pos:
+MOV A, D
+OUT 8
+MOVB AH, 194
+MOVB AL, 100
+OUT 9
+RET
+
+;function for printing light gray shadow of crystall ball
+char_light_grey_pos:
+MOV A, D
+OUT 8
+MOVB AH, 194
+MOVB AL, 144
+OUT 9
+RET
+
+;function for printing  inner cells of crystall ball in limited random colors
+char_random_color_pos:
+MOV A, D
+OUT 8
+loop_random_color:
+IN 10
+CMPB AL, 15
+JE end
+CMPB AL, 31
+JE end
+CMPB AL, 143
+JE end
+CMPB AL, 159
+JE end
+CMPB AL, 207
+JE end
+CMPB AL, 223
+JE end
+CMPB AL, 255
+JE end
+CMPB AL, 251
+JE end
+CMPB AL, 111
+JE end
+CMPB AL, 254
+JE end
+JMP loop_random_color
+end:
+MOVB AH, 194
+OUT 9
+RET
+
+;function for printing dark grey shadow of crystall ball
+char_dark_grey_pos:
+MOV A, D
+OUT 8
+MOVB AH, 194
+MOVB AL, 112
+OUT 9
+RET
+
+;function to print stars in modes
+stars:
+MOVB DH, 4
+MOVB DL, 2
+CALL print_star_one
+MOVB DH, 1
+MOVB DL, 30
+CALL print_star_four
+MOVB DH, 7
+MOVB DL, 28
+CALL print_star_two
+MOVB DH, 9
+MOVB DL, 4
+CALL print_star_four
+MOVB DH, 10
+MOVB DL, 26
+CALL print_star_three
+MOVB DH, 0
+MOVB DL, 6
+CALL print_star_three
+MOVB DH, 14
+MOVB DL, 0
+CALL print_star_two
+MOVB DH, 15
+MOVB DL, 28
+CALL print_star_one
+MOVB DH, 3
+MOVB DL, 16
+CALL print_star_four
+MOVB DH, 15
+MOVB DL, 14
+CALL print_star_four
+RET
+
+;function to print starts in crystall ball
+stars_ball:
+MOVB DH, 0
+MOVB DL, 4
+CALL print_star_four
+MOVB DH, 3
+MOVB DL, 28
+CALL print_star_one
+MOVB DH, 3
+MOVB DL, 24
+CALL print_star_four
+MOVB DH, 2
+MOVB DL, 18
+CALL print_star_four
+MOVB DH, 2
+MOVB DL, 10
+CALL print_star_two
+MOVB DH, 2
+MOVB DL, 2
+CALL print_star_two
+MOVB DH, 3
+MOVB DL, 6
+CALL print_star_four
+MOVB DH, 4
+MOVB DL, 2
+CALL print_star_three
+MOVB DH, 5
+MOVB DL, 26
+CALL print_star_two
+MOVB DH, 6
+MOVB DL, 4
+CALL print_star_four
+MOVB DH, 0
+MOVB DL, 18
+CALL print_star_two
+MOVB DH, 0
+MOVB DL, 30
+CALL print_star_four
+RET
+
+
+;***FUNCTION FOR MODES  INSTRUCTION PAGE***
+modes:
+CALL stars
+MOVB DH, 1
+MOVB DL, 2
+loop_first_row:
+CALL print_text
+CMPB DL, 28
+JB loop_first_row
+MOVB DH, 2
+MOVB DL, 2
+loop_second_row:
+CALL print_text_blue
+CMPB DL, 30
+JB loop_second_row
+MOVB DH, 4
+MOVB DL, 6
+loop_third_row:
+CALL print_text
+CMPB DL, 26
+JB loop_third_row
+MOVB DH, 5
+MOVB DL, 4
+loop_four_row:
+CALL print_text
+CMPB DL, 30
+JB loop_four_row
+MOVB DH, 6
+MOVB DL, 4
+loop_five_row:
+CALL print_text
+CMPB DL,  28
+JB loop_five_row
+MOVB DH, 7
+MOVB DL, 6
+loop_six_row:
+CALL print_text
+CMPB DL, 28
+JNE loop_six_row
+MOVB DH, 9
+MOVB DL, 10
+loop_seven_row:
+CALL print_text_blue
+CMPB DL, 22
+JB loop_seven_row
+MOVB DH, 11
+MOVB DL, 6
+loop_eight_row:
+CALL print_text
+CMPB DL, 26
+JB loop_eight_row
+MOVB DH, 12
+MOVB DL, 8
+loop_nine_row:
+CALL print_text
+CMPB DL, 24
+JB loop_nine_row
+RET
+
+print_star_one:
+MOV A, D
+OUT 8
+MOVB AH, 195
+MOVB AL, 255
+OUT 9
+RET
+
+print_star_two:
+MOV A, D
+OUT 8
+MOVB AH, 196
+MOVB AL, 255
+OUT 9
+RET
+
+print_star_three:
+MOV A, D
+OUT 8
+MOVB AH, 197
+MOVB AL, 255
+OUT 9
+RET
+
+print_star_four:
+MOV A, D
+OUT 8
+MOVB AH, 198
+MOVB AL, 255
+OUT 9
+RET
+
+;***FUNCTION FOR INTRO AND INSTRUCTION PAGES***
+intro:
+MOVB DH, 1
+MOVB DL, 2
+CALL print_star_one
+MOVB DH, 2
+MOVB DL, 14
+CALL print_star_three
+MOVB DH, 12
+MOVB DL, 18
+CALL print_star_one
+MOVB DH, 0
+MOVB DL, 30
+CALL print_star_two
+MOVB DH, 8
+MOVB DL, 16
+CALL print_star_four
+MOVB DH, 13
+MOVB DL, 4
+CALL print_star_two
+MOVB DH, 14
+MOVB DL, 28
+CALL print_star_three
+MOVB DH, 4
+MOVB DL, 4
+MOV B, title
+loop_intro:
+MOV A, D
+OUT 8
+MOVB AH, [B]
+CMPB AH, 0
+JE intro2
+MOVB AL, 254
+OUT 9
+INC B
+ADD D, 2
+JMP loop_intro
+
+intro2:
+MOVB DH, 6
+MOVB DL, 2
+MOV B, title2
+loop_intro2:
+MOV A, D
+OUT 8
+MOVB AH, [B]
+CMPB AH, 0
+JE instructions_print
+MOVB AL, 254
+OUT 9
+INC B
+ADD D, 2
+JMP loop_intro2
+
+instructions_print:
+MOVB DH, 10
+MOVB DL, 6
+MOV B, instructions
+loop_ins:
+MOV A, D
+OUT 8
+MOVB AH, [B]
+CMPB AH, 0
+JE input
+MOVB AL, 31
+OUT 9
+INC B
+ADD D, 2
+JMP loop_ins
+input:
+IN 5
+AND A, 1
+CMP A, 1
+JNE input
+IN 6 
+CMP A, 73
+JE instructions_page
+CMP A, 105
+JE instructions_page
+JMP input
+
+;general instruction page
+instructions_page:
+MOV A, 3
+OUT 7
+MOVB DH, 0
+MOVB DL, 8
+CALL print_star_four
+MOVB DH, 4
+MOVB DL, 28
+CALL print_star_three
+MOVB DH, 3
+MOVB DL, 2
+CALL print_star_one
+MOVB DH, 7
+MOVB DL, 16
+CALL print_star_four
+MOVB DH, 13
+MOVB DL, 4
+CALL print_star_three
+MOVB DH, 14
+MOVB DL, 14
+CALL print_star_two
+MOVB DH, 14
+MOVB DL, 26
+CALL print_star_four
+MOV B, instruction_page_text
+MOVB DH, 2
+MOVB DL, 6
+loop_ins_pg:
+CALL print_text
+CMPB DL, 24
+JB loop_ins_pg
+MOVB DH, 4
+MOVB DL, 6
+loop_ins_pg_two:
+CALL print_text_blue
+CMPB DL, 12
+JB loop_ins_pg_two
+loop_ins_pg_two_second:
+CALL print_text
+CMPB DL, 24
+JB loop_ins_pg_two_second
+MOVB DH, 6
+MOVB DL, 2
+loop_ins_pg_three:
+CALL print_text
+CMPB DL, 30
+JB loop_ins_pg_three
+MOVB DH, 8
+MOVB DL, 4
+loop_ins_pg_four:
+CALL print_text_blue
+CMPB DL, 28
+JB loop_ins_pg_four
+MOVB DH, 10
+MOVB DL, 2
+loop_ins_pg_five:
+CALL print_text
+CMPB DL, 30
+JB loop_ins_pg_five
+MOVB DH, 12
+MOVB DL, 8
+loop_ins_pg_six:
+CALL print_text_blue
+CMPB DL, 24
+JB loop_ins_pg_six
+
+;loop to validate '1' or '2' for text or thinking mode
+input_for_next_page:
+IN 5
+AND A, 1
+CMP A, 1
+JNE input_for_next_page
+IN 6
+CMP A, 49
+JE thinking_mode
+CMP A, 50
+JE text_mode
+JMP input_for_next_page
+
+;thinking mode instruction page
+thinking_mode:
+MOV A, 3
+OUT 7 
+CALL modes
+MOVB DH, 14
+MOVB DL, 8
+loop_ten_row:
+CALL print_text_blue
+CMPB DL, 26
+JB loop_ten_row
+JMP loop_for_start_input_thinking
+
+;loop for thinking to validate 's' for start
+loop_for_start_input_thinking:
+IN 5
+AND A, 1
+CMP A, 1
+JNE loop_for_start_input_thinking
+IN 6
+CMP A, 83
+JE to_crystall_thinking
+CMP A, 115
+JE to_crystall_thinking
+JMP loop_for_start_input_thinking
+
+;loop for text to validate 's' for start
+loop_for_start_input_text:
+IN 5
+AND A, 1
+CMP A, 1
+JNE loop_for_start_input_text
+IN 6
+CMP A, 83
+JE to_crystall_text
+CMP A, 115
+JE to_crystall_text
+JMP loop_for_start_input_text
+
+;text mode instruction page
+text_mode:
+MOV A, 3
+OUT 7 
+MOV B, text_for_text
+CALL modes
+MOVB DH, 13
+MOVB DL, 8
+loop_ten1_row:
+CALL print_text
+CMPB DL, 26
+JB loop_ten1_row
+MOVB DH, 14
+MOVB DL, 8
+loop_eleven_row:
+CALL print_text_blue
+CMPB DL, 26
+JB loop_eleven_row
+JMP loop_for_start_input_text
+
+;showing the crystall ball in thinking mode
+to_crystall_thinking:
+CALL crystall_ball
+not_ready:
+MOVB DH, 1
+MOVB DL, 0
+CALL clean
+MOVB DH, 1
+MOVB DL, 2
+MOV C, ask
+CALL answers
+MOV A, 50000
+OUT 3
+MOV A, 2
+OUT 0
+MOV B, 0
+MOV [quit], B
+STI
+loop_for_interrupt:
+CALL fill_in_random
+MOVB DH, 10
+MOVB DL, 24
+CALL char_color_pos
+MOVB DH, 11
+CALL char_color_pos
+MOV A, [quit]
+CMP A, 1
+JE print_answer
+JMP loop_for_interrupt
+print_answer:
+CLI
+MOVB DH, 1
+MOVB DL, 0
+CALL clean
+MOVB DH, 1
+MOVB DL, 2
+MOV C, ready
+CALL answers
+yes_no:
+IN 5 
+AND A, 1
+CMP A, 1
+JNE yes_no
+IN 6
+CMP A, 'Y'
+JE its_yes
+CMP A, 'y'
+JE its_yes
+CMP A, 'N'
+JE its_no
+CMP A, 'n'
+JE its_no
+JMP yes_no
+its_yes:
+MOVB DH, 1
+MOVB DL, 0
+CALL clean
+MOVB DH, 1
+MOVB DL, 0
+CALL answer_generator
+CALL answers
+
+return1:
+IN 5
+AND A, 1
+CMP A, 1
+JNE return1
+IN 6 
+CMPB AL, 'R'
+JE ret1
+CMPB AL, 'r'
+JE ret1
+CMPB AL, 66
+JE back1
+CMPB AL, 'b'
+JE back1
+RET
+
+ret1:
+CLI
+JMP not_ready
+
+back1:
+JMP  instructions_page
+
+its_no:
+CLI
+JMP not_ready
+
+;showing the crystall ball in text mode
+to_crystall_text:
+CALL crystall_ball
+MOVB DH, 1
+MOVB DL, 0
+MOV C, ask1
+CALL answers
+MOV D, 0x1000
+res:
+MOVB [D], 0
+INC D
+CMP D, 0x101F
+JBE res
+MOV D, 0x1000
+question_input:
+IN 5
+AND A, 1
+CMP A, 1
+JNE question_input
+IN 6
+MOVB [D], AL
+CMPB AL, '0'
+JE res
+CMPB AL, 63
+JE no_more_space
+INC D
+JMP question_input
+no_more_space:
+MOVB DH, 1
+MOVB DL, 0
+CALL clean
+MOVB DH, 1
+MOVB DL, 8
+MOV C, think
+CALL answers
+MOV C, 4
+loop_move:
+CALL fill_in_random
+DEC C
+CMP C, 0
+JNE loop_move
+MOVB DH, 1
+MOVB DL, 0
+CALL clean
+MOVB DH, 1
+MOVB DL, 0
+CALL answer_generator
+CALL answers
+return:
+IN 5
+AND A, 1
+CMP A, 1
+JNE return
+IN 6 
+CMPB AL, 'R'
+JE ret
+CMPB AL, 'r'
+JE ret
+CMPB AL, 66
+JE back
+CMPB AL, 'b'
+JE back
+RET
+
+ret:
+JMP to_crystall_text
+
+back:
+MOV D, 0x1000
+res1:
+MOVB [D], 0
+INC D
+CMP D, 0x101F
+JBE res1
+JMP  instructions_page
+
+main:
+MOV SP, 0x0FFF
+
+MOV A, 1
+OUT 7
+
+;redefining color 144
+MOV A, 0xA1B0
+OUT 8 
+MOV A, 0x3336
+OUT 9 
+MOV A, 0xA1B1 
+OUT 8 
+MOV A, 0x3649
+OUT 9 
+
+;redefining characrter 194
+MOV C, cell_for_ball
+MOV D, 0x9840
+CALL redefine
+
+;redefining char 195 (star1)
+MOV C, star1
+MOV D, 0x9860
+CALL redefine
+
+;redefining char 196 (star2)
+MOV C, star2
+MOV D, 0x9880
+CALL redefine
+
+;redefining char 197 (star3)
+MOV C, star3
+MOV D, 0x98A0
+CALL redefine
+
+;redefining char 198 (star4)
+MOV C, star4
+MOV D, 0x98C0
+CALL redefine
+
+;redefining color 80 (lighter grey)
+MOV A, 0xA0F0 
+OUT 8 
+MOV A, 0x3B42 
+OUT 9 
+MOV A, 0xA0F1 
+OUT 8 
+MOV A, 0x4254
+OUT 9 
+
+;redefining color 112 (darker grey)
+MOV A, 0xA150
+OUT 8 
+MOV A, 0x2B27 
+OUT 9 
+MOV A, 0xA151 
+OUT 8 
+MOV A, 0x2740
+OUT 9 
+
+;setting the background color
+MOV A, 0xA300
+OUT 8
+MOV A, 80
+OUT 9
+CALL intro
+HLT
+
+;*************CRYSTALL BALL*****************
+crystall_ball:
+MOV A, 3
+OUT 7
+
+CALL stars_ball
+
+first_row_ball:
+MOVB DH, 3
+MOVB DL, 14
+loop:
+CALL char_color_pos
+ADDB DL, 2
+CMPB DL, 18
+JE second_row_ball
+JMP loop
+
+second_row_ball:
+MOVB DH, 4
+MOVB DL, 12
+loop1:
+CALL char_color_pos
+SUBB DL, 2
+CMPB DL, 8
+JNE loop1
+ADDB DL, 10
+loop2:
+CALL char_color_pos
+ADDB DL, 2
+CMPB DL, 22
+JE third_row_ball
+JMP loop2
+
+third_row_ball:
+MOVB DH, 5
+MOVB DL, 8
+CALL char_color_pos
+MOVB DL, 22
+CALL char_color_pos
+
+fourth_row_ball:
+MOVB DH, 6
+MOVB DL, 6
+CALL char_color_pos
+;**************
+MOVB DH, 7
+CALL char_color_pos
+;***************
+MOVB DH, 6
+MOVB DL, 24
+CALL char_color_pos
+;***************
+MOVB DH, 7
+CALL char_color_pos
+
+eighth_row_ball:
+MOVB DH, 8
+MOVB DL, 4
+CALL char_color_pos
+;**************
+MOVB DH, 9
+CALL char_color_pos
+;***************
+MOVB DH, 8
+MOVB DL, 26
+CALL char_color_pos
+;***************
+MOVB DH, 9
+CALL char_color_pos
+
+tenth_row_ball:
+MOVB DH, 10
+MOVB DL, 6
+CALL char_color_pos
+;**************
+MOVB DH, 11
+CALL char_color_pos
+;***************
+MOVB DH, 10
+MOVB DL, 24
+CALL char_color_pos
+;***************
+MOVB DH, 11
+CALL char_color_pos
+
+twelfth_row_ball:
+MOVB DH, 12
+MOVB DL, 8
+CALL char_color_pos
+;**************
+MOVB DH, 13
+CALL char_color_pos
+MOVB DL, 12
+CALL char_color_pos
+SUBB DL, 2
+CALL char_brown_pos
+MOVB DL, 6
+CALL char_light_grey_pos
+;***************
+MOVB DH, 12
+MOVB DL, 22
+CALL char_color_pos
+;***************
+MOVB DH, 13
+CALL char_color_pos
+MOVB DL, 18
+CALL char_color_pos
+ADDB DL, 2
+CALL char_brown_pos
+MOVB DL, 24
+CALL char_light_grey_pos
+fourteenth_row_ball:
+MOVB DH, 14
+MOVB DL, 4
+CALL char_dark_grey_pos
+MOVB DL, 2
+CALL char_light_grey_pos
+MOVB DL, 6
+CALL char_color_pos
+loop4:
+ADDB DL, 2 
+CALL char_brown_pos
+CMPB DL, 22
+JNE loop4
+MOVB DL, 24
+CALL char_color_pos
+MOVB DL, 26
+CALL char_dark_grey_pos
+MOVB DL, 28
+CALL char_light_grey_pos
+
+fifteenth_row_ball:
+MOVB DH, 15
+MOVB DL, 8
+loop3:
+CALL char_color_pos
+ADDB DL, 2
+CMPB DL, 24
+JNE loop3
+MOVB DL, 4
+CALL char_light_grey_pos
+MOVB DL, 26
+CALL char_light_grey_pos
+MOVB DL, 24
+CALL char_dark_grey_pos
+MOVB DL, 6
+CALL char_dark_grey_pos
+CALL fill_in_random
+RET
+
+
+;function for filling the crystall ball with colors
+fill_in_random:
+MOVB DH, 4
+MOVB DL, 14
+CALL char_random_color_pos
+MOVB DL, 16
+CALL char_random_color_pos
+MOVB DH, 13
+CALL char_random_color_pos
+MOVB DL, 14
+CALL char_random_color_pos
+big_fill_in:
+MOVB DH, 5
+MOVB DL, 10
+loop_big_fill_in:
+CALL char_random_color_pos
+ADDB DL, 2
+CMPB DL, 22
+JB loop_big_fill_in
+MOVB DL, 10
+INCB DH
+CMPB DH, 12
+JA continue
+JMP loop_big_fill_in
+continue:
+MOVB DH, 6
+MOVB DL, 8
+loop_next_fill_in:
+CALL char_random_color_pos
+INCB DH
+CMPB DH, 12
+JB loop_next_fill_in
+MOVB DL, 22
+MOVB DH, 6
+loop_next_fill_in_second:
+CALL char_random_color_pos
+INCB DH
+CMPB DH, 12
+JB loop_next_fill_in_second
+MOVB DH, 8
+MOVB DL, 6
+CALL char_random_color_pos
+INCB DH
+CALL char_random_color_pos
+MOVB DL, 24
+CALL char_random_color_pos
+MOVB DH, 8
+CALL char_random_color_pos
+RET
